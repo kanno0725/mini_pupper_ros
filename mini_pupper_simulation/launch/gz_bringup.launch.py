@@ -34,10 +34,10 @@ def generate_launch_description():
 
     # Gazebo Harmonic 起動。
     # GZ_SIM_SYSTEM_PLUGIN_PATH がないと gz_ros2_control プラグインが見つからない。
-    # world は stock の empty.sdf ではなく、Imu / Sensors システムを足した自作 empty_imu.sdf を使う
+    # world は stock の empty.sdf ではなく、Imu / Sensors システムを足した自作 playground.sdf を使う
     # （stock empty.sdf にはこれらが無く、IMU センサや gpu_lidar が動かないため）。
     world_path = PathJoinSubstitution([
-        FindPackageShare("mini_pupper_simulation"), "worlds", "empty_imu.sdf"])
+        FindPackageShare("mini_pupper_simulation"), "worlds", "playground.sdf"])
     gazebo = ExecuteProcess(
         cmd=["gz", "sim", "-r", world_path],
         additional_env={"GZ_SIM_SYSTEM_PLUGIN_PATH": "/opt/ros/jazzy/lib"},
