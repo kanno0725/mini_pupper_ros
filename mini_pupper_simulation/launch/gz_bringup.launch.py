@@ -34,8 +34,8 @@ def generate_launch_description():
 
     # Gazebo Harmonic 起動。
     # GZ_SIM_SYSTEM_PLUGIN_PATH がないと gz_ros2_control プラグインが見つからない。
-    # world は stock の empty.sdf ではなく、IMU システムを足した自作 empty_imu.sdf を使う
-    # （stock empty.sdf には Imu システムが無く、IMU センサが動かないため）。
+    # world は stock の empty.sdf ではなく、Imu / Sensors システムを足した自作 empty_imu.sdf を使う
+    # （stock empty.sdf にはこれらが無く、IMU センサや gpu_lidar が動かないため）。
     world_path = PathJoinSubstitution([
         FindPackageShare("mini_pupper_simulation"), "worlds", "empty_imu.sdf"])
     gazebo = ExecuteProcess(
@@ -60,6 +60,18 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=["/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU"],
+        output="screen",
+    )
+
+    # Gazebo の LiDAR（gz.msgs.LaserScan）を ROS の sensor_msgs/LaserScan に橋渡し。
+    # URDF の gpu_lidar センサが <topic>scan</topic> に publish する gz topic を、
+    # Phase 4 の回避ノードなどが購読する ROS の /scan に変換する。
+    # 描画系センサなので world 側に Sensors システムのロードが必要（empty_imu.sdf に追加済み）。
+    # 「[」は gz→ROS の一方向を表す。
+    scan_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=["/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"],
         output="screen",
     )
 
@@ -117,6 +129,7 @@ def generate_launch_description():
         gazebo,
         clock_bridge,
         imu_bridge,
+        scan_bridge,
         description_launch,
         spawn_robot,
         TimerAction(period=5.0, actions=[joint_state_broadcaster_spawner]),

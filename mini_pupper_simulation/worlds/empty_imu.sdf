@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <!--
-  Gazebo Harmonic 用の空ワールド（IMU 対応版）。
-  stock の empty.sdf に IMU センサを処理する Imu システムを足しただけ。
-  gz-sim の IMU センサは Imu システムが world にロードされて初めて動くため、
-  Physics/UserCommands/SceneBroadcaster/Contact に加えて Imu を明示的に読み込む。
-  Sensors システムはカメラ/LiDAR など描画系センサ用で、IMU 単体には不要。
+  Gazebo Harmonic 用の空ワールド（IMU + LiDAR 対応版）。
+  stock の empty.sdf にセンサ処理用のシステムを足したもの。
+  gz-sim のセンサはそれを処理するシステムが world にロードされて初めて動くため、
+  Physics/UserCommands/SceneBroadcaster/Contact に加えて次を明示的に読み込む:
+    - Imu     : <sensor type="imu"> を処理（物理量のみなので描画不要）
+    - Sensors : <sensor type="gpu_lidar"> やカメラなど描画系センサを処理（レンダラを使う）
 -->
 <sdf version="1.6">
   <world name="empty">
@@ -32,6 +33,12 @@
     <plugin
       filename="gz-sim-imu-system"
       name="gz::sim::systems::Imu">
+    </plugin>
+    <!-- gpu_lidar / camera など描画系センサを毎ステップ描画し gz topic に publish する -->
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
     </plugin>
 
     <light type="directional" name="sun">
