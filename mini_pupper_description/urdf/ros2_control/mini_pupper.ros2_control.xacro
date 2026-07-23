@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Gazebo Harmonic (gz_ros2_control) は position_pid 非対応のため、
+       シミュレーション・実機とも position コマンドインターフェースを使う。
+       gz_ros2_control は position を内部PID（デフォルト P=0.1）で力制御するため、
+       Classic の pos_kp=5.0 相当の比例ゲインを明示指定する -->
   <xacro:macro name="pupper_joint" params="joint_name initial_value use_gazebo_hardware">
     <joint name="${joint_name}">
       <xacro:if value="${use_gazebo_hardware}">
-        <command_interface name="position_pid"/>
-        <param name="pos_kp">5.0</param>
-        <param name="pos_kd">0.05</param>
+        <param name="position_proportional_gain">5.0</param>
       </xacro:if>
-      <xacro:unless value="${use_gazebo_hardware}">
-        <command_interface name="position"/>
-      </xacro:unless>
+      <command_interface name="position"/>
       <state_interface name="position">
         <param name="initial_value">${initial_value}</param>
       </state_interface>
@@ -19,9 +19,12 @@
   </xacro:macro>
 
   <xacro:macro name="mini_pupper_ros2_control" params="use_gazebo_hardware">
+    <!-- Gazebo Harmonic 用プラグイン（gz_ros2_control）。
+         Classic の libgazebo_ros2_control.so は Jazzy に存在しない -->
     <xacro:if value="${use_gazebo_hardware}">
       <gazebo>
-        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <plugin filename="gz_ros2_control-system"
+                name="gz_ros2_control::GazeboSimROS2ControlPlugin">
           <parameters>$(find mini_pupper_simulation)/config/ros2_control/mini_pupper_2_controllers_sim.yaml</parameters>
           <hold_joints>false</hold_joints>
         </plugin>
@@ -31,7 +34,7 @@
     <ros2_control name="MiniPupper" type="system">
       <hardware>
         <xacro:if value="${use_gazebo_hardware}">
-          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
           <param name="hold_joints">true</param>
         </xacro:if>
         <xacro:unless value="${use_gazebo_hardware}">

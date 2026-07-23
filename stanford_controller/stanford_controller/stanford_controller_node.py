@@ -220,14 +220,18 @@ class StanfordControllerNode(Node):
                 @ self.state.foot_locations
             )
 
-            # Construct foot rotation matrix to compensate for body tilt
+            # Construct foot rotation matrix to compensate for body tilt.
+            # Gazebo の IMU に対しては上流の符号（-roll/-pitch）だと正のフィードバック
+            # になり発振・転倒したため、符号を反転（roll/pitch）して安定化した。
+            # 実機の IMU 取り付け向きが sim と逆なら、実機移行時（Phase 4）に符号を戻すこと。
+            # correction_factor も上流の 0.8 は位置制御＋制御遅れに対して大きく発振するため 0.3 に下げた。
             (roll, pitch, yaw) = quat2euler(self.state.quat_orientation)
-            correction_factor = 0.8
+            correction_factor = 0.3
             max_tilt = 0.4
             roll_compensation = correction_factor * \
-                np.clip(-roll, -max_tilt, max_tilt)
+                np.clip(roll, -max_tilt, max_tilt)
             pitch_compensation = correction_factor * \
-                np.clip(-pitch, -max_tilt, max_tilt)
+                np.clip(pitch, -max_tilt, max_tilt)
             rmat = euler2mat(roll_compensation, pitch_compensation, 0)
 
             rotated_foot_locations = rmat.T @ rotated_foot_locations
@@ -292,14 +296,18 @@ class StanfordControllerNode(Node):
                     @ self.state.foot_locations
                 )
 
-            # Construct foot rotation matrix to compensate for body tilt
+            # Construct foot rotation matrix to compensate for body tilt.
+            # Gazebo の IMU に対しては上流の符号（-roll/-pitch）だと正のフィードバック
+            # になり発振・転倒したため、符号を反転（roll/pitch）して安定化した。
+            # 実機の IMU 取り付け向きが sim と逆なら、実機移行時（Phase 4）に符号を戻すこと。
+            # correction_factor も上流の 0.8 は位置制御＋制御遅れに対して大きく発振するため 0.3 に下げた。
             (roll, pitch, yaw) = quat2euler(self.state.quat_orientation)
-            correction_factor = 0.8
+            correction_factor = 0.3
             max_tilt = 0.4
             roll_compensation = correction_factor * \
-                np.clip(-roll, -max_tilt, max_tilt)
+                np.clip(roll, -max_tilt, max_tilt)
             pitch_compensation = correction_factor * \
-                np.clip(-pitch, -max_tilt, max_tilt)
+                np.clip(pitch, -max_tilt, max_tilt)
             rmat = euler2mat(roll_compensation, pitch_compensation, 0)
 
             rotated_foot_locations = rmat.T @ rotated_foot_locations

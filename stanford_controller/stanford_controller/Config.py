@@ -26,11 +26,11 @@ class Configuration:
         self.delta_y = 0.050
         self.x_shift = 0.0
         self.z_shift = 0.0
-        self.default_z_ref = -0.07
+        self.default_z_ref = -0.07  # 立ち高さ
 
         # SWING
         self.z_coeffs = None
-        self.z_clearance = 0.03
+        self.z_clearance = 0.03  # 遊脚の足上げ高さ
         self.alpha = (
             0.5  # Ratio between touchdown distance and total horizontal stance movement
         )
@@ -40,9 +40,16 @@ class Configuration:
 
         # GAIT
         self.dt = 0.015
+        # プロンク（4本同時）: p1で4本とも浮く。p3は遊脚ウィンドウだが全脚接地で休み。
+        # 行=脚[FL,FR,BL,BR]、列=4フェーズ[overlap,swing,overlap,swing]
         self.num_phases = 4
         self.contact_phases = np.array(
-            [[1, 1, 1, 0], [1, 0, 1, 1], [1, 0, 1, 1], [1, 1, 1, 0]]
+            [
+                [0, 1, 1, 1],  # FL
+                [1, 1, 0, 1],  # FR
+                [1, 1, 0, 1],  # BL
+                [0, 1, 1, 1],  # BR
+            ]
         )
         self.overlap_time = (
             0.09  # duration of the phase where all four feet are on the ground
@@ -167,13 +174,9 @@ class Configuration:
 
     @property
     def phase_ticks(self):
-        return np.array([
-            self.overlap_ticks,
-            self.swing_ticks,
-            self.overlap_ticks,
-            self.swing_ticks
-        ])
+        # [overlap, swing] を num_phases/2 回繰り返す。num_phases=4→トロット、8→walk 両対応
+        return np.array([self.overlap_ticks, self.swing_ticks] * (self.num_phases // 2))
 
     @property
     def phase_length(self):
-        return 2 * self.overlap_ticks + 2 * self.swing_ticks
+        return (self.overlap_ticks + self.swing_ticks) * (self.num_phases // 2)

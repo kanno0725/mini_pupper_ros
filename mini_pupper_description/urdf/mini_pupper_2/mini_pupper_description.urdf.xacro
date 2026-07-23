@@ -1198,7 +1198,7 @@
     </sensor>
   </gazebo> 
 
-  <gazebo>
+  <!-- <gazebo>
     <plugin filename="libgazebo_ros_p3d.so" name="p3d_base_controller">
       <body_name>base_link</body_name>
       <frame_name>odom</frame_name>
@@ -1207,7 +1207,7 @@
       <rpy_offset>0 0 0</rpy_offset>
       <gaussian_noise>0.01</gaussian_noise>
     </plugin>
-  </gazebo>
+  </gazebo> -->
   
   <link name="imu_link">
     <inertial>
@@ -1222,16 +1222,17 @@
     <child link="imu_link"/>
   </joint>
 
+  <!-- Gazebo Harmonic ネイティブの IMU センサ。
+       Classic の libgazebo_ros_imu_sensor.so は Harmonic でロードできないため、
+       gz-sim の imu センサに置換。world 側の Imu システムがこれを処理し、
+       <topic> で指定した gz topic に gz.msgs.IMU を publish する。
+       この gz topic を launch の ros_gz_bridge で ROS の sensor_msgs/Imu に橋渡しする。 -->
   <gazebo reference="imu_link">
-    <sensor name="imu_controller" type="imu">
+    <sensor name="imu_sensor" type="imu">
       <always_on>true</always_on>
       <update_rate>50</update_rate>
-      <plugin name="gazebo_ros_imu_sensor" filename="libgazebo_ros_imu_sensor.so">
-          <ros>
-              <namespace>/imu</namespace>
-              <remapping>~/out:=data</remapping>
-          </ros>
-      </plugin>
+      <topic>imu/data</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
     </sensor>
   </gazebo>
 
