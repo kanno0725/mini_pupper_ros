@@ -12,6 +12,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   mini_pupper_simulation/odom_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
+  RENAME odom_tf_broadcaster
 )
 
 install(

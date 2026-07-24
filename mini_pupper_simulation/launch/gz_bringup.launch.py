@@ -66,12 +66,32 @@ def generate_launch_description():
     # Gazebo の LiDAR（gz.msgs.LaserScan）を ROS の sensor_msgs/LaserScan に橋渡し。
     # URDF の gpu_lidar センサが <topic>scan</topic> に publish する gz topic を、
     # Phase 4 の回避ノードなどが購読する ROS の /scan に変換する。
-    # 描画系センサなので world 側に Sensors システムのロードが必要（empty_imu.sdf に追加済み）。
+    # 描画系センサなので world 側に Sensors システムのロードが必要（playground.sdf に追加済み）。
     # 「[」は gz→ROS の一方向を表す。
     scan_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=["/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"],
+        output="screen",
+    )
+
+    # Gazebo の Odometry（gz.msgs.Odometry）を ROS の nav_msgs/Odometry に橋渡し。
+    # URDF の OdometryPublisher システムが <odom_topic>odom</odom_topic> に publish する
+    # gz topic を、odom_tf_broadcaster が購読する ROS の /odom に変換する。
+    # 「[」は gz→ROS の一方向を表す。
+    odometry_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=["/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry"],
+        output="screen",
+    )
+
+    # /odom を購読し odom→base_link の TF を配信する。
+    # 位置・姿勢の中身は gz の OdometryPublisher が生成し、上の bridge 経由で /odom に届く。
+    # この TF があると RViz の Fixed Frame を odom に固定でき、機体がワープせず動いて見える。
+    odom_tf_broadcaster = Node(
+        package="mini_pupper_simulation",
+        executable="odom_tf_broadcaster",
         output="screen",
     )
 
@@ -130,6 +150,8 @@ def generate_launch_description():
         clock_bridge,
         imu_bridge,
         scan_bridge,
+        odometry_bridge,
+        odom_tf_broadcaster,
         description_launch,
         spawn_robot,
         TimerAction(period=5.0, actions=[joint_state_broadcaster_spawner]),

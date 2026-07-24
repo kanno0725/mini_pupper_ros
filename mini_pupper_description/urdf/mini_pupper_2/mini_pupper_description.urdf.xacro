@@ -1200,16 +1200,21 @@
     </sensor>
   </gazebo> 
 
-  <!-- <gazebo>
-    <plugin filename="libgazebo_ros_p3d.so" name="p3d_base_controller">
-      <body_name>base_link</body_name>
-      <frame_name>odom</frame_name>
-      <update_rate>10.0</update_rate>
-      <xyz_offset>0 0 0</xyz_offset>
-      <rpy_offset>0 0 0</rpy_offset>
-      <gaussian_noise>0.01</gaussian_noise>
+  <!-- gz ネイティブのオドメトリ源。sim 上の真の胴体姿勢から odom→base_link を計算し、
+       gz topic <odom_topic> に gz.msgs.Odometry を publish する。
+       これを ros_gz_bridge で ROS /odom に橋渡しし、odom_tf_broadcaster が TF 化する。
+       Classic の p3d プラグイン（libgazebo_ros_p3d.so）は Harmonic 非対応のため置換。
+       <odom_topic> を明示しないと /model/<name>/odometry にスコープされ bridge と噛み合わない。 -->
+  <gazebo>
+    <plugin filename="gz-sim-odometry-publisher-system"
+            name="gz::sim::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <odom_topic>odom</odom_topic>
+      <robot_base_frame>base_link</robot_base_frame>
+      <dimensions>3</dimensions>        <!-- 平面移動（x,y,yaw）。四足は3で十分 -->
+      <odom_publish_frequency>50</odom_publish_frequency>
     </plugin>
-  </gazebo> -->
+  </gazebo>
   
   <link name="imu_link">
     <inertial>
