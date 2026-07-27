@@ -30,9 +30,11 @@ def generate_launch_description():
 
     default_map_path = PathJoinSubstitution([this_package, 'maps', 'map.yaml'])
     nav2_param_file_path = PathJoinSubstitution([this_package, 'param', 'mini_pupper.yaml'])
-    nav2_launch_path = PathJoinSubstitution(
-        [FindPackageShare('nav2_bringup'), 'launch', 'bringup_launch.py']
+    localization_launch_path = PathJoinSubstitution(
+        [FindPackageShare('nav2_bringup'), 'launch', 'localization_launch.py']
     )
+    navigation_launch_path = PathJoinSubstitution(
+        [this_package, 'launch', 'navigation_nav2.launch.py'])
     rviz_config_file_path = PathJoinSubstitution([this_package, 'rviz', 'navigation.rviz'])
 
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -53,9 +55,16 @@ def generate_launch_description():
         use_sim_time_launch_arg,
         map_launch_arg,
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(nav2_launch_path),
+            PythonLaunchDescriptionSource(localization_launch_path),
             launch_arguments={
                 'map': map,
+                'params_file': nav2_param_file_path,
+                'use_sim_time': use_sim_time
+            }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(navigation_launch_path),
+            launch_arguments={
                 'params_file': nav2_param_file_path,
                 'use_sim_time': use_sim_time
             }.items()
